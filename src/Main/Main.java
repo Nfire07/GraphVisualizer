@@ -1,8 +1,10 @@
 package Main;
 
-import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import javax.swing.*;
 
 public class Main {
     public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -13,17 +15,31 @@ public class Main {
         JFrame window = new JFrame("GraphVisualizer");
         window.setBounds(screenSize.width / 2 - 500, screenSize.height / 2 - 300, 1000, 600);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setLayout(null);
-        window.getContentPane().setBackground(Color.decode("#121212"));
 
-        DrawingPanel drawing = new DrawingPanel();
-        drawing.setBackground(Color.decode("#121212"));
-        drawing.setBounds(0, 0, window.getWidth(), window.getHeight());
+        DrawingPanel panel = new DrawingPanel();
 
-        window.add(drawing);
+        panel.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_R) {
+                    Main.nodes.clear();
+                    DrawingPanel.arches.clear();
+                    Main.letter = 'A';
+                    System.out.println("Reset nodes and arches");
+                    panel.repaint();
+                }
+            }
+        });
+
+        panel.setBackground(Color.decode("#121212"));
+        window.add(panel);
         window.setVisible(true);
 
-        Timer timer = new Timer(16, e -> drawing.repaint());
-        timer.start();
+        panel.requestFocusInWindow();
+
+        new Timer(1, e -> {
+            panel.setSize(window.getContentPane().getSize());
+            panel.repaint();
+        }).start();
     }
 }

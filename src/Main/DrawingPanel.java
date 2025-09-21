@@ -1,44 +1,67 @@
 package Main;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionAdapter;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
+import javax.swing.*;
 
-import javax.swing.JPanel;
+public class DrawingPanel extends JPanel implements MouseListener, MouseMotionListener {
 
-public class DrawingPanel extends JPanel implements MouseListener {
-    boolean isNode = false;
-    Rectangle mouseHitbox = new Rectangle(0, 0, 4, 4);
-    boolean encountered1 = false;
-    boolean encountered2 = false;
-    NodeData click1 = null;
-    NodeData click2 = null;
-    ArrayList<Point[]> arches = new ArrayList<Point[]>();
+    private final Rectangle mouseHitbox = new Rectangle(0, 0, 1, 1);
+    private NodeData click1 = null;
+    private NodeData click2 = null;
+    private int clickCounter = 0;
+
+    public static ArrayList<Arch> arches = new ArrayList<>();
+
+    private Point dragStartPoint = null;
+    private final Point offset = new Point(0, 0);
 
     public DrawingPanel() {
         this.addMouseListener(this);
-        this.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                mouseHitbox.setLocation(e.getX(), e.getY());
-                repaint();
-            }
-        });
+        this.addMouseMotionListener(this);
+        this.setFocusable(true);
+        this.requestFocusInWindow();
     }
 
-    public static void drawNode(Graphics2D g2d, Node node) {
-        g2d.drawOval(node.data.x, node.data.y, 30, 30);
-        g2d.drawString(node.data.label, node.data.x + 10, node.data.y + 20);
+    public void drawNode(Graphics2D g2d, Node node, Color nodeBackgroundColor, Color nodeForegroundColor) {
+        int size = 30;
+        int x = node.data.x + offset.x;
+        int y = node.data.y + offset.y;
+
+        g2d.setColor(nodeForegroundColor);
+        g2d.drawOval(x, y, size, size);
+
+        g2d.setColor(nodeBackgroundColor);
+        g2d.fillOval(x + 1, y + 1, size - 1, size - 1);
+
+        g2d.setColor(nodeForegroundColor);
+        g2d.drawString(node.data.label, x + 12, y + 20);
     }
 
-    public static void drawHitbox(Graphics2D g2d, Rectangle rec) {
+    public void drawHitbox(Graphics2D g2d, Rectangle rec) {
         g2d.drawRect(rec.x, rec.y, rec.width, rec.height);
+    }
+
+    public void drawArches(Graphics2D g2d, Color archColor, Color textColor) {
+        for (Arch arch : arches) {
+            int x1 = arch.from.x + 15 + offset.x;
+            int y1 = arch.from.y + 15 + offset.y;
+            int x2 = arch.to.x + 15 + offset.x;
+            int y2 = arch.to.y + 15 + offset.y;
+
+            g2d.setColor(archColor);
+            g2d.drawLine(x1, y1, x2, y2);
+
+            String lengthStr = arch.length;
+            int midX = (x1 + x2) / 2;
+            int midY = (y1 + y2) / 2;
+
+            FontMetrics metrics = g2d.getFontMetrics();
+            int textWidth = metrics.stringWidth(lengthStr);
+            g2d.setColor(textColor);
+            g2d.drawString(lengthStr, midX - textWidth / 2, midY - 5);
+        }
     }
 
     @Override
@@ -46,102 +69,153 @@ public class DrawingPanel extends JPanel implements MouseListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        for (Point[] arch : arches) {
-            g2d.setColor(Color.decode("#fefefe"));
-            // from left to right
-            if(arch[0].x < arch[1].x)
-            	g2d.drawLine(arch[0].x+30, arch[0].y+15, arch[1].x, arch[1].y+15);
-            // from right to left
-            else
-            	g2d.drawLine(arch[1].x+30,arch[1].y+15,arch[0].x,arch[0].y+15);
-        }
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
-        for (Node node : Main.nodes) {
-            g2d.setColor(Color.decode("#fefefe"));
-            drawNode(g2d, node);
-        }
-
+        g2d.setColor(Color.decode("#fefefe"));
         drawHitbox(g2d, mouseHitbox);
+
+        drawArches(g2d, Color.decode("#195698"), Color.decode("#fefefe"));
+
         for (Node node : Main.nodes) {
-            Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, 30, 30);
-            if (mouseHitbox.intersects(nodeHitbox)) {
-                g2d.setColor(Color.PINK);
+            drawNode(g2d, node, Color.decode("#10280b"), Color.decode("#fefefe"));
+        }
+
+        g2d.setColor(Color.decode("#ff0044"));
+        for (Node node : Main.nodes) {
+            Rectangle nodeHitbox = new Rectangle(node.data.x + offset.x, node.data.y + offset.y, 30, 30);
+            if (nodeHitbox.contains(mouseHitbox.getLocation())) {
                 drawHitbox(g2d, nodeHitbox);
             }
         }
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        switch (e.getButton()) {
-            case MouseEvent.BUTTON1:
-                boolean encounteredNode = false;
-                for (Node node : Main.nodes) {
-                    Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, 30, 30);
-                    if (mouseHitbox.intersects(nodeHitbox)) {
-                        encounteredNode = true;
-                        if (!encountered1) {
-                            click1 = node.data;
-                            encountered1 = true;
-                        } else if (!encountered2) {
-                            click2 = node.data;
-                            encountered2 = true;
+    private boolean archExists(NodeData n1, NodeData n2) {
+        Point p1 = new Point(n1.x, n1.y);
+        Point p2 = new Point(n2.x, n2.y);
+        for (Arch arch : arches) {
+            boolean same = arch.from.equals(p1) && arch.to.equals(p2);
+            boolean reverse = arch.from.equals(p2) && arch.to.equals(p1);
+            if (same || reverse)
+                return true;
+        }
+        return false;
+    }
 
-                            if (!click1.equals(click2)) {
-                                boolean exists = false;
-                                for (Point[] arch : arches) {
-                                    boolean sameDirection = arch[0].equals(new Point(click1.x, click1.y)) && arch[1].equals(new Point(click2.x, click2.y));
-                                    boolean oppositeDirection = arch[0].equals(new Point(click2.x, click2.y)) && arch[1].equals(new Point(click1.x, click1.y));
-                                    if (sameDirection || oppositeDirection) {
-                                        exists = true;
-                                        break;
-                                    }
-                                }
+    private String blockUserToSelectLength() {
+        while (true) {
+            String input = JOptionPane.showInputDialog(this, "Insert a length for the arch:");
 
-                                if (!exists) {
-                                    Point[] points = new Point[2];
-                                    points[0] = new Point(click1.x, click1.y);
-                                    points[1] = new Point(click2.x, click2.y);
-                                    arches.add(points);
-                                    System.out.println("Created arch between " + click1.label + " and " + click2.label);
-                                }
-                            }
-                            else {
-                            	click1=null;
-                            	click2=null;
-                            }
+            if (input == null || input.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Length cannot be empty or cancelled. Please try again.");
+                continue;
+            }
 
-                            encountered1 = false;
-                            encountered2 = false;
-                        }
-                    }
-                }
-
-                if (encounteredNode && click1!=null) {
-                    System.out.println("Clicked node " + click1.toString());
-                } else {
-                    Main.nodes.add(new Node(new NodeData(e.getX(), e.getY(), Main.letter + ""), null));
-                    Main.letter++;
-                    System.out.println("Generated Node to{" + e.getX() + ";" + e.getY() + "}");
-                    repaint();
-                }
-                break;
-            case MouseEvent.BUTTON2:
-                break;
+            return input.trim();
         }
     }
 
     @Override
-    public void mouseEntered(MouseEvent e) {
-        mouseHitbox.setLocation(e.getX(), e.getY());
+    public void mousePressed(MouseEvent e) {
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            dragStartPoint = e.getPoint();
+            setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+            return;
+        }
+
+        if (e.getButton() != MouseEvent.BUTTON1)
+            return;
+
+        Point clickPoint = new Point(e.getX() - offset.x, e.getY() - offset.y);
+        boolean clickedOnNode = false;
+
+        for (Node node : Main.nodes) {
+            Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, 30, 30);
+            if (nodeHitbox.contains(clickPoint)) {
+                clickedOnNode = true;
+
+                if (clickCounter == 0) {
+                    click1 = node.data;
+                    clickCounter = 1;
+                    System.out.println("Selected node 1: " + click1.label);
+                } else if (clickCounter == 1) {
+                    click2 = node.data;
+
+                    if (!click1.equals(click2)) {
+                        if (!archExists(click1, click2)) {
+                            String length = blockUserToSelectLength();
+                            if (length != null) {
+                                Arch newArch = new Arch(
+                                        new Point(click1.x, click1.y),
+                                        new Point(click2.x, click2.y),
+                                        length);
+                                arches.add(newArch);
+                                System.out.println("Created arch between " + click1.label + " and " + click2.label);
+                            }
+                        } else {
+                            System.out.println("Arch already exists between " + click1.label + " and " + click2.label);
+                        }
+                    } else {
+                        System.out.println("Clicked same node twice, ignoring.");
+                    }
+
+                    click1 = null;
+                    click2 = null;
+                    clickCounter = 0;
+                }
+                break;
+            }
+        }
+
+        if (!clickedOnNode) {
+            Main.nodes.add(new Node(new NodeData(clickPoint.x, clickPoint.y, Main.letter + ""), null));
+            Main.letter++;
+            System.out.println("Created new node at {" + clickPoint.x + ";" + clickPoint.y + "}");
+        }
+
         repaint();
     }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            dragStartPoint = null;
+            setCursor(Cursor.getDefaultCursor());
+        }
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        if ((e.getModifiersEx() & MouseEvent.BUTTON3_DOWN_MASK) != 0 && dragStartPoint != null) {
+            Point currentPoint = e.getPoint();
+            int dx = currentPoint.x - dragStartPoint.x;
+            int dy = currentPoint.y - dragStartPoint.y;
+            offset.translate(dx, dy);
+            dragStartPoint = currentPoint;
+            repaint();
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseHitbox.setLocation(e.getPoint());
+        repaint();
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        repaint();
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        repaint();
+    }
+
     @Override
     public void mouseExited(MouseEvent e) {
         repaint();
     }
-    @Override
-    public void mousePressed(MouseEvent e) {}
-    @Override
-    public void mouseReleased(MouseEvent e) {}
 }

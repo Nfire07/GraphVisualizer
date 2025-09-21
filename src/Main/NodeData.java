@@ -10,7 +10,6 @@ public class NodeData {
 		this.label = label;
 	}
 	
-	
 	@Override
 	public String toString() {
 	    return "NodeData{" +
