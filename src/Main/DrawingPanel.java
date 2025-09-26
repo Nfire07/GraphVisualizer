@@ -8,12 +8,13 @@ import javax.swing.*;
 public class DrawingPanel extends JPanel implements MouseListener, MouseMotionListener {
 
     private final Rectangle mouseHitbox = new Rectangle(0, 0, 1, 1);
-    private NodeData click1 = null;
-    private NodeData click2 = null;
+    private Node click1 = null;
+    private Node click2 = null;
     private int clickCounter = 0;
 
+    public static ArrayList<Node> nodes = new ArrayList<>();
     public static ArrayList<Arch> arches = new ArrayList<>();
-
+    
     private Point dragStartPoint = null;
     private final Point offset = new Point(0, 0);
 
@@ -45,10 +46,10 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
 
     public void drawArches(Graphics2D g2d, Color archColor, Color textColor) {
         for (Arch arch : arches) {
-            int x1 = arch.from.x + 15 + offset.x;
-            int y1 = arch.from.y + 15 + offset.y;
-            int x2 = arch.to.x + 15 + offset.x;
-            int y2 = arch.to.y + 15 + offset.y;
+            int x1 = arch.from.data.x + 15 + offset.x;
+            int y1 = arch.from.data.y + 15 + offset.y;
+            int x2 = arch.to.data.x + 15 + offset.x;
+            int y2 = arch.to.data.y + 15 + offset.y;
 
             g2d.setColor(archColor);
             g2d.drawLine(x1, y1, x2, y2);
@@ -79,12 +80,12 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
 
         drawArches(g2d, Color.decode("#195698"), Color.decode("#fefefe"));
 
-        for (Node node : Main.nodes) {
+        for (Node node : nodes) {
             drawNode(g2d, node, Color.decode("#10280b"), Color.decode("#fefefe"));
         }
 
         g2d.setColor(Color.decode("#ff0044"));
-        for (Node node : Main.nodes) {
+        for (Node node : nodes) {
             Rectangle nodeHitbox = new Rectangle(node.data.x + offset.x, node.data.y + offset.y, 30, 30);
             if (nodeHitbox.contains(mouseHitbox.getLocation())) {
                 drawHitbox(g2d, nodeHitbox);
@@ -92,9 +93,9 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
         }
     }
 
-    private boolean archExists(NodeData n1, NodeData n2) {
-        Point p1 = new Point(n1.x, n1.y);
-        Point p2 = new Point(n2.x, n2.y);
+    private boolean archExists(Node n1, Node n2) {
+        Point p1 = new Point(n1.data.x, n1.data.y);
+        Point p2 = new Point(n2.data.x, n2.data.y);
         for (Arch arch : arches) {
             boolean same = arch.from.equals(p1) && arch.to.equals(p2);
             boolean reverse = arch.from.equals(p2) && arch.to.equals(p1);
@@ -131,31 +132,31 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
         Point clickPoint = new Point(e.getX() - offset.x, e.getY() - offset.y);
         boolean clickedOnNode = false;
 
-        for (Node node : Main.nodes) {
+        for (Node node : nodes) {
             Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, 30, 30);
             if (nodeHitbox.contains(clickPoint)) {
                 clickedOnNode = true;
 
                 if (clickCounter == 0) {
-                    click1 = node.data;
+                    click1 = node;
                     clickCounter = 1;
-                    System.out.println("Selected node 1: " + click1.label);
+                    System.out.println("Selected node 1: " + click1.data.label);
                 } else if (clickCounter == 1) {
-                    click2 = node.data;
+                    click2 = node;
 
                     if (!click1.equals(click2)) {
                         if (!archExists(click1, click2)) {
                             String length = blockUserToSelectLength();
                             if (length != null) {
                                 Arch newArch = new Arch(
-                                        new Point(click1.x, click1.y),
-                                        new Point(click2.x, click2.y),
+                                        click1,
+                                        click2,
                                         length);
                                 arches.add(newArch);
-                                System.out.println("Created arch between " + click1.label + " and " + click2.label);
+                                System.out.println("Created arch between " + click1.data.label + " and " + click2.data.label);
                             }
                         } else {
-                            System.out.println("Arch already exists between " + click1.label + " and " + click2.label);
+                            System.out.println("Arch already exists between " + click1.data.label + " and " + click2.data.label);
                         }
                     } else {
                         System.out.println("Clicked same node twice, ignoring.");
@@ -170,7 +171,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
         }
 
         if (!clickedOnNode) {
-            Main.nodes.add(new Node(new NodeData(clickPoint.x, clickPoint.y, Main.letter + ""), null));
+            nodes.add(new Node(new NodeData(clickPoint.x, clickPoint.y, Main.letter + ""), null));
             Main.letter++;
             System.out.println("Created new node at {" + clickPoint.x + ";" + clickPoint.y + "}");
         }

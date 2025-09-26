@@ -1,14 +1,15 @@
 package Main;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Node {
 	NodeData data;
-	ArrayList<Node> nodes;
+	HashMap<Node,Arch> links;
 	
-	public Node(NodeData data, ArrayList<Node> nodes) {
+	public Node(NodeData data, HashMap<Node,Arch> links) {
 		this.data = data;
-		this.nodes = nodes;
+		this.links = links;
 	}	
 	
 }

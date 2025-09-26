@@ -3,11 +3,11 @@ package Main;
 import java.awt.Point;
 
 public class Arch {
-    public final Point from;
-    public final Point to;
+    public final Node from;
+    public final Node to;
     public final String length;
 
-    public Arch(Point from, Point to, String length) {
+    public Arch(Node from, Node to, String length) {
         this.from = from;
         this.to = to;
         this.length = length;
@@ -15,6 +15,7 @@ public class Arch {
 
     @Override
     public String toString() {
-        return "Arch[from=(" + from.x + "," + from.y + "), to=(" + to.x + "," + to.y + "), length=" + length + "]";
+        return "Arch[from=(" + from.data.x + "," + from.data.y + "), to=(" + to.data.x + "," + to.data.y + "), length=" + length + "]";
     }
+    
 }

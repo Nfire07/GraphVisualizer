@@ -8,7 +8,6 @@ import javax.swing.*;
 
 public class Main {
     public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-    public static ArrayList<Node> nodes = new ArrayList<>();
     public static char letter = 'A';
 
     public static void main(String[] args) {
@@ -22,7 +21,7 @@ public class Main {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_R) {
-                    Main.nodes.clear();
+                    DrawingPanel.nodes.clear();
                     DrawingPanel.arches.clear();
                     Main.letter = 'A';
                     System.out.println("Reset nodes and arches");
