@@ -5,11 +5,18 @@ import java.util.HashMap;
 
 public class Node {
 	NodeData data;
-	HashMap<Node,Arch> links;
+	ArrayList<Adiacent> links;
 	
-	public Node(NodeData data, HashMap<Node,Arch> links) {
+	public Node(NodeData data) {
 		this.data = data;
-		this.links = links;
+		this.links = new ArrayList<>();
 	}	
+	
+	public void addAdiacent(Node node,int len) {
+		links.add(new Adiacent(node,len));
+	}
+	
+	
+	
 	
 }

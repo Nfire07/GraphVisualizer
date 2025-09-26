@@ -3,16 +3,20 @@ package Main;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+
 import javax.swing.*;
 
 public class DrawingPanel extends JPanel implements MouseListener, MouseMotionListener {
 
     private final Rectangle mouseHitbox = new Rectangle(0, 0, 1, 1);
+    
     private Node click1 = null;
     private Node click2 = null;
+    
     private int clickCounter = 0;
-
-    public static ArrayList<Node> nodes = new ArrayList<>();
+    
+    public static Graph graph = new Graph();
     public static ArrayList<Arch> arches = new ArrayList<>();
     
     private Point dragStartPoint = null;
@@ -80,12 +84,12 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
 
         drawArches(g2d, Color.decode("#195698"), Color.decode("#fefefe"));
 
-        for (Node node : nodes) {
+        for (Node node : graph.nodes) {
             drawNode(g2d, node, Color.decode("#10280b"), Color.decode("#fefefe"));
         }
 
         g2d.setColor(Color.decode("#ff0044"));
-        for (Node node : nodes) {
+        for (Node node : graph.nodes) {
             Rectangle nodeHitbox = new Rectangle(node.data.x + offset.x, node.data.y + offset.y, 30, 30);
             if (nodeHitbox.contains(mouseHitbox.getLocation())) {
                 drawHitbox(g2d, nodeHitbox);
@@ -113,6 +117,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
                 JOptionPane.showMessageDialog(this, "Length cannot be empty or cancelled. Please try again.");
                 continue;
             }
+            	
 
             return input.trim();
         }
@@ -132,7 +137,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
         Point clickPoint = new Point(e.getX() - offset.x, e.getY() - offset.y);
         boolean clickedOnNode = false;
 
-        for (Node node : nodes) {
+        for (Node node : graph.nodes) {
             Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, 30, 30);
             if (nodeHitbox.contains(clickPoint)) {
                 clickedOnNode = true;
@@ -148,11 +153,8 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
                         if (!archExists(click1, click2)) {
                             String length = blockUserToSelectLength();
                             if (length != null) {
-                                Arch newArch = new Arch(
-                                        click1,
-                                        click2,
-                                        length);
-                                arches.add(newArch);
+                                arches.add(new Arch(click1,click2,length));
+                                graph.addArch(click1, click2, Integer.parseInt(length));
                                 System.out.println("Created arch between " + click1.data.label + " and " + click2.data.label);
                             }
                         } else {
@@ -171,7 +173,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
         }
 
         if (!clickedOnNode) {
-            nodes.add(new Node(new NodeData(clickPoint.x, clickPoint.y, Main.letter + ""), null));
+        	graph.addNode(new Node(new NodeData(clickPoint.x, clickPoint.y, Main.letter + "")));
             Main.letter++;
             System.out.println("Created new node at {" + clickPoint.x + ";" + clickPoint.y + "}");
         }

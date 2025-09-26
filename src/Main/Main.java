@@ -9,7 +9,7 @@ import javax.swing.*;
 public class Main {
     public static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     public static char letter = 'A';
-
+    
     public static void main(String[] args) {
         JFrame window = new JFrame("GraphVisualizer");
         window.setBounds(screenSize.width / 2 - 500, screenSize.height / 2 - 300, 1000, 600);
@@ -21,7 +21,7 @@ public class Main {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_R) {
-                    DrawingPanel.nodes.clear();
+                    DrawingPanel.graph.nodes.clear();
                     DrawingPanel.arches.clear();
                     Main.letter = 'A';
                     System.out.println("Reset nodes and arches");
