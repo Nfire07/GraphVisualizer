@@ -11,16 +11,18 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
 
     private final Rectangle mouseHitbox = new Rectangle(0, 0, 1, 1);
     
-    private Node click1 = null;
-    private Node click2 = null;
+    public static Node click1 = null;
+    public static Node click2 = null;
     
-    private int clickCounter = 0;
+    public static int clickCounter = 0;
     
     public static Graph graph = new Graph();
     public static ArrayList<Arch> arches = new ArrayList<>();
     
     private Point dragStartPoint = null;
     private final Point offset = new Point(0, 0);
+    
+    public static boolean pathFinderMode = false;
 
     public DrawingPanel() {
         this.addMouseListener(this);
@@ -95,14 +97,18 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
                 drawHitbox(g2d, nodeHitbox);
             }
         }
+        
+        g2d.setColor(Color.decode("#fefefe"));
+        g2d.setFont(new Font("Arial",Font.BOLD,15));
+        g2d.drawString("PathFinderMode="+pathFinderMode,15,20);
     }
 
     private boolean archExists(Node n1, Node n2) {
         Point p1 = new Point(n1.data.x, n1.data.y);
         Point p2 = new Point(n2.data.x, n2.data.y);
         for (Arch arch : arches) {
-            boolean same = arch.from.equals(p1) && arch.to.equals(p2);
-            boolean reverse = arch.from.equals(p2) && arch.to.equals(p1);
+        	boolean same = arch.from.equals(n1) && arch.to.equals(n2);
+        	boolean reverse = arch.from.equals(n2) && arch.to.equals(n1);
             if (same || reverse)
                 return true;
         }
@@ -146,9 +152,18 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
                     click1 = node;
                     clickCounter = 1;
                     System.out.println("Selected node 1: " + click1.data.label);
-                } else if (clickCounter == 1) {
+                }	
+                else if (clickCounter == 1) {
                     click2 = node;
-
+                    
+                    if(pathFinderMode) {
+                    	System.out.println(GraphAlgoritms.dijkstra(graph, click1,click2));
+                    	click1 = null;
+                    	click2 = null;
+                    	clickCounter = 0;
+                        return;
+                    }
+                    
                     if (!click1.equals(click2)) {
                         if (!archExists(click1, click2)) {
                             String length = blockUserToSelectLength();
@@ -168,6 +183,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
                     click2 = null;
                     clickCounter = 0;
                 }
+                
                 break;
             }
         }

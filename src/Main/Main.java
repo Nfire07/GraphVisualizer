@@ -23,9 +23,16 @@ public class Main {
                 if (e.getKeyCode() == KeyEvent.VK_R) {
                     DrawingPanel.graph.nodes.clear();
                     DrawingPanel.arches.clear();
+                    DrawingPanel.click1 = null;
+                    DrawingPanel.click2 = null;
+                    DrawingPanel.clickCounter = 0;
                     Main.letter = 'A';
                     System.out.println("Reset nodes and arches");
                     panel.repaint();
+                }
+                if(e.getKeyCode() == KeyEvent.VK_A) {
+                	DrawingPanel.pathFinderMode = !DrawingPanel.pathFinderMode;
+                	System.out.println("[MODE] pathFinderMode="+DrawingPanel.pathFinderMode);
                 }
             }
         });
