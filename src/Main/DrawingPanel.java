@@ -13,7 +13,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
     
     public static Node click1 = null;
     public static Node click2 = null;
-    
+    public static Dimension nodeSize = new Dimension(30,30);
     public static int clickCounter = 0;
     
     public static Graph graph = new Graph();
@@ -21,7 +21,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
     
     private Point dragStartPoint = null;
     private final Point offset = new Point(0, 0);
-    
+    private String shortestPath = "";
     public static boolean pathFinderMode = false;
 
     public DrawingPanel() {
@@ -32,15 +32,14 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
     }
 
     public void drawNode(Graphics2D g2d, Node node, Color nodeBackgroundColor, Color nodeForegroundColor) {
-        int size = 30;
         int x = node.data.x + offset.x;
         int y = node.data.y + offset.y;
 
         g2d.setColor(nodeForegroundColor);
-        g2d.drawOval(x, y, size, size);
+        g2d.drawOval(x, y, nodeSize.width, nodeSize.height);
 
         g2d.setColor(nodeBackgroundColor);
-        g2d.fillOval(x + 1, y + 1, size - 1, size - 1);
+        g2d.fillOval(x + 1, y + 1, nodeSize.width - 1, nodeSize.height - 1);
 
         g2d.setColor(nodeForegroundColor);
         g2d.drawString(node.data.label, x + 12, y + 20);
@@ -84,23 +83,34 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
         g2d.setColor(Color.decode("#fefefe"));
         drawHitbox(g2d, mouseHitbox);
 
-        drawArches(g2d, Color.decode("#195698"), Color.decode("#fefefe"));
+        drawArches(g2d, Color.decode("#EDD607"), Color.decode("#fefefe"));
 
         for (Node node : graph.nodes) {
-            drawNode(g2d, node, Color.decode("#10280b"), Color.decode("#fefefe"));
+            drawNode(g2d, node, Color.decode("#008C3A"), Color.decode("#fefefe"));
         }
 
         g2d.setColor(Color.decode("#ff0044"));
         for (Node node : graph.nodes) {
-            Rectangle nodeHitbox = new Rectangle(node.data.x + offset.x, node.data.y + offset.y, 30, 30);
+            Rectangle nodeHitbox = new Rectangle(node.data.x + offset.x, node.data.y + offset.y, nodeSize.width, nodeSize.height);
             if (nodeHitbox.contains(mouseHitbox.getLocation())) {
                 drawHitbox(g2d, nodeHitbox);
             }
         }
         
-        g2d.setColor(Color.decode("#fefefe"));
-        g2d.setFont(new Font("Arial",Font.BOLD,15));
+        g2d.setColor(Color.decode("#4B688D"));
+        g2d.setFont(new Font("Arial",Font.PLAIN,15));
         g2d.drawString("PathFinderMode="+pathFinderMode,15,20);
+        g2d.setColor(Color.decode("#fefefe"));
+        try{
+        	g2d.drawString(shortestPath.split("\n")[0], 15, 40);
+        }catch (IndexOutOfBoundsException e) {
+			g2d.drawString("Path Not Found", 15,40);
+		}
+        try {
+        	g2d.drawString(shortestPath.split("\n")[1], 15, 60);
+        }catch(IndexOutOfBoundsException e) {
+        	g2d.drawString("Nodes may be non-connected", 15,60);
+        }
     }
 
     private boolean archExists(Node n1, Node n2) {
@@ -118,13 +128,17 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
     private String blockUserToSelectLength() {
         while (true) {
             String input = JOptionPane.showInputDialog(this, "Insert a length for the arch:");
-
-            if (input == null || input.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Length cannot be empty or cancelled. Please try again.");
+            boolean exceptionFound = false;
+            try {
+            	Integer.parseInt(input);
+            }catch (Exception e) {
+				exceptionFound = true;
+			}
+            
+            if (input == null || input.trim().isEmpty() || exceptionFound) {
+                JOptionPane.showMessageDialog(this, "Lenght must be an Integer. Please try again.");
                 continue;
             }
-            	
-
             return input.trim();
         }
     }
@@ -144,7 +158,7 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
         boolean clickedOnNode = false;
 
         for (Node node : graph.nodes) {
-            Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, 30, 30);
+            Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, nodeSize.width, nodeSize.height);
             if (nodeHitbox.contains(clickPoint)) {
                 clickedOnNode = true;
 
@@ -157,7 +171,8 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
                     click2 = node;
                     
                     if(pathFinderMode) {
-                    	System.out.println(GraphAlgoritms.dijkstra(graph, click1,click2));
+                    	shortestPath = GraphAlgoritms.dijkstra(graph, click1,click2);
+                    	System.out.println(shortestPath);
                     	click1 = null;
                     	click2 = null;
                     	clickCounter = 0;

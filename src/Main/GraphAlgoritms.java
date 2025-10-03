@@ -18,21 +18,21 @@ public class GraphAlgoritms {
 	    table.get(start).len = 0;
 
 	    while (!allViewed(table)) {
-	        Node current = getNonVisitedNode(table);
-	        if (current == null) break;
+	        Node nonVisited = getNonVisitedNode(table);
+	        if (nonVisited == null) break;
 
-	        Properties currentProps = table.get(current);
+	        Properties nonVisitedProperties = table.get(nonVisited);
 
-	        for (Adiacent adiacent : current.links) {
-	            int newDistance = currentProps.len + adiacent.len;
+	        for (Adiacent adiacent : nonVisited.links) {
+	            int newDistance = nonVisitedProperties.len + adiacent.len;
 
 	            if (newDistance < table.get(adiacent.node).len) {
 	            	table.get(adiacent.node).len = newDistance;
-	            	table.get(adiacent.node).prev = current;
+	            	table.get(adiacent.node).prev = nonVisited;
 	            }
 	        }
 
-	        currentProps.viewed = true;
+	        nonVisitedProperties.viewed = true;
 	    }
 
 	    StringBuilder path = new StringBuilder();
