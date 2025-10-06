@@ -22,6 +22,8 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
     private Point dragStartPoint = null;
     private final Point offset = new Point(0, 0);
     private String shortestPath = "";
+
+	private Node draggedNode;
     public static boolean pathFinderMode = false;
 
     public DrawingPanel() {
@@ -150,6 +152,22 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
             setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
             return;
         }
+        else if (e.isShiftDown() && e.getButton() == MouseEvent.BUTTON1) {
+            Point clickPoint = new Point(e.getX() - offset.x, e.getY() - offset.y);
+
+            for (Node node : graph.nodes) {
+                Rectangle nodeHitbox = new Rectangle(node.data.x, node.data.y, nodeSize.width, nodeSize.height);
+                if (nodeHitbox.contains(clickPoint)) {
+                    draggedNode = node;
+                    dragStartPoint = clickPoint;
+                    setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                    return;
+                }
+            }
+
+            return;
+        }
+
 
         if (e.getButton() != MouseEvent.BUTTON1)
             return;
@@ -218,6 +236,11 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
             dragStartPoint = null;
             setCursor(Cursor.getDefaultCursor());
         }
+        if (e.isShiftDown() && e.getButton() == MouseEvent.BUTTON1) {
+            dragStartPoint = null;
+            draggedNode = null;
+            setCursor(Cursor.getDefaultCursor());
+        }
     }
 
     @Override
@@ -230,6 +253,23 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
             dragStartPoint = currentPoint;
             repaint();
         }
+        if ((e.getModifiersEx() & MouseEvent.SHIFT_DOWN_MASK) != 0 && 
+            (e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0 &&
+            draggedNode != null && dragStartPoint != null) {
+
+            Point currentPoint = new Point(e.getX() - offset.x, e.getY() - offset.y);
+            int dx = currentPoint.x - dragStartPoint.x;
+            int dy = currentPoint.y - dragStartPoint.y;
+
+            draggedNode.data.x += dx;
+            draggedNode.data.y += dy;
+
+            dragStartPoint = currentPoint;
+
+            repaint();
+            return;
+        }
+
     }
 
     @Override

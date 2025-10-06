@@ -37,7 +37,7 @@ public class Main {
             }
         });
 
-        panel.setBackground(Color.decode("#121212"));
+        panel.setBackground(Color.decode("#212121"));
         window.add(panel);
         window.setVisible(true);
 
